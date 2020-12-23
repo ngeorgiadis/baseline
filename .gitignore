@@ -1,0 +1,8 @@
+*.exe
+data/
+__debug*
+out.csv
+cmd/server/settings.cfg
+cmd/ds/comm_f.csv
+cmd/ds/dom_index.csv
+.vscode
