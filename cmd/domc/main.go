@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"encoding/csv"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -297,7 +298,7 @@ func main() {
 	//
 	// clean graph from
 	//
-	lc := xG.FindLBack(&authors, 15)
+	lc := xG.FindLBack(&authors, 25)
 
 	// remove edges that are not in
 	// the graph
@@ -336,8 +337,17 @@ func main() {
 	}
 
 	for i, c := range lc {
+
 		writeNodes2(c, i, allnodes, alledges)
+
+		cMaxCore, m := c.MaxKCore()
+		writeNodes3(cMaxCore, i, m, allnodes, alledges)
 	}
+
+	// // prune
+	// for i := 0; i < len(lc); i++ {
+	// 	lc[i], _ = lc[i].MaxKCore()
+	// }
 
 }
 
@@ -407,8 +417,10 @@ func writeNodes(ixG graph.IxGraph, i int) {
 func writeNodes2(xG graph.XGraph, i int, allnodes [][]string, alledges [][]string) {
 
 	os.MkdirAll(fmt.Sprintf("./data/%v/", runID), 0777)
+	os.MkdirAll(fmt.Sprintf("../../data/ui/"), 0777)
 
 	of, _ := os.Create(fmt.Sprintf("./data/%v/nodes_i%v.csv", runID, i))
+
 	writer := csv.NewWriter(of)
 
 	for i, row := range allnodes {
@@ -431,7 +443,11 @@ func writeNodes2(xG graph.XGraph, i int, allnodes [][]string, alledges [][]strin
 	writer.Flush()
 	of.Close()
 
+	b, _ := ioutil.ReadFile(fmt.Sprintf("./data/%v/nodes_i%v.csv", runID, i))
+	ioutil.WriteFile(fmt.Sprintf("../../data/ui/nodes_i%v.csv", i), b, 0777)
+
 	of, _ = os.Create(fmt.Sprintf("./data/%v/edges_i%v.csv", runID, i))
+
 	defer of.Close()
 	writer = csv.NewWriter(of)
 
@@ -450,4 +466,71 @@ func writeNodes2(xG graph.XGraph, i int, allnodes [][]string, alledges [][]strin
 	}
 
 	writer.Flush()
+	of.Close()
+
+	b, _ = ioutil.ReadFile(fmt.Sprintf("./data/%v/edges_i%v.csv", runID, i))
+	ioutil.WriteFile(fmt.Sprintf("../../data/ui/edges_i%v.csv", i), b, 0777)
+
+}
+
+func writeNodes3(xG graph.XGraph, i int, m int, allnodes [][]string, alledges [][]string) {
+
+	os.MkdirAll(fmt.Sprintf("./data/%v/", runID), 0777)
+	os.MkdirAll(fmt.Sprintf("../../data/ui/"), 0777)
+
+	of, _ := os.Create(fmt.Sprintf("./data/%v/nodes_maxcore_i%v.csv", runID, i))
+
+	writer := csv.NewWriter(of)
+
+	for i, row := range allnodes {
+		if i == 0 {
+			row = append(row, "domscore")
+			row = append(row, "degree")
+			row = append(row, "is_initial")
+			row = append(row, "max_k_core")
+
+			writer.Write(row)
+			continue
+		}
+
+		if n, ok := xG[row[0]]; ok {
+			row = append(row, fmt.Sprintf("%v", n.Data.GetDomScore()))
+			row = append(row, fmt.Sprintf("%v", len(n.Edges)))
+			row = append(row, fmt.Sprintf("%v", n.IsInitialCommunityNode))
+			row = append(row, fmt.Sprintf("%v", m))
+			writer.Write(row)
+		}
+	}
+
+	writer.Flush()
+	of.Close()
+
+	b, _ := ioutil.ReadFile(fmt.Sprintf("./data/%v/nodes_maxcore_i%v.csv", runID, i))
+	ioutil.WriteFile(fmt.Sprintf("../../data/ui/nodes_maxcore_i%v.csv", i), b, 0777)
+
+	of, _ = os.Create(fmt.Sprintf("./data/%v/edges_maxcore_i%v.csv", runID, i))
+
+	defer of.Close()
+	writer = csv.NewWriter(of)
+
+	for i, row := range alledges {
+		if i == 0 {
+			writer.Write(row)
+			continue
+		}
+
+		_, ok := xG[row[0]]
+		_, ok2 := xG[row[1]]
+
+		if ok && ok2 {
+			writer.Write(row)
+		}
+	}
+
+	writer.Flush()
+	of.Close()
+
+	b, _ = ioutil.ReadFile(fmt.Sprintf("./data/%v/edges_maxcore_i%v.csv", runID, i))
+	ioutil.WriteFile(fmt.Sprintf("../../data/ui/edges_maxcore_i%v.csv", i), b, 0777)
+
 }

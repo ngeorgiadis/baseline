@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"baseline/m/v2/cmd/server/config"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/ngeorgiadis/baseline/cmd/server/config"
 
 	"path"
 	"path/filepath"

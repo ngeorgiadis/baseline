@@ -41,7 +41,8 @@ func GetRouter(appConfig *config.Config) (*mux.Router, error) {
 	app.HandleFunc("/home", homeHandler)
 	app.HandleFunc("/list", listHandler(appConfig))
 	app.HandleFunc("/file/{filename}", fileHandler(appConfig))
-	app.HandleFunc("/graph/{id}", getGraphData2(appConfig))
+	app.HandleFunc("/graph/{id}", getGraphData2(appConfig, false))
+	app.HandleFunc("/graph/{id}/maxcore", getGraphData2(appConfig, true))
 
 	// websocket handler
 	ws := r.PathPrefix("/ws").Subrouter()
